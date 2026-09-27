@@ -11,11 +11,13 @@ public class PaddleController : MonoBehaviour
     public float moveSpeed = 8f;
 
     [Header("左右边界(世界坐标 X)")]
+    // 边界 = 可视半宽 - 挡板自身半宽 = 6.309 - 1.33 ≈ 4.98
+    // 这样挡板边缘刚好贴住屏幕左右两侧,不会滑出画面。
     [Tooltip("挡板中心能到达的最左位置")]
-    public float leftLimit = -6.5f;
+    public float leftLimit = -4.98f;
 
     [Tooltip("挡板中心能到达的最右位置")]
-    public float rightLimit = 6.5f;
+    public float rightLimit = 4.98f;
 
     /// <summary>
     /// Update:每一渲染帧调用一次(帧率不固定,可能是 60 次/秒,也可能是 144 次/秒)。
