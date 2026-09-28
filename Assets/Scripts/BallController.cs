@@ -24,46 +24,48 @@ public class BallController : MonoBehaviour
         rb = GetComponent<Rigidbody2D>();
     }
 
+    [Header("反弹参数")]
+    [Tooltip("出射最大偏角(度),从【竖直方向】量起。0=永远垂直弹回,60=最多斜 60°")]
+    [Range(0f, 80f)]
+    public float maxBounceAngle = 60f;
+
+    private float currentSpeed;        // 速率由我们自己维护(单一真相源)
+    private ContactPoint2D[] contactBuffer = new ContactPoint2D[4];   // 预分配,避免每次碰撞都产生垃圾
+
     void Start()
     {
-        // 角度 → 单位方向向量。Unity 的三角函数吃的是【弧度】,不是角度。
+        currentSpeed = launchSpeed;
         float rad = launchAngle * Mathf.Deg2Rad;
-        Vector2 dir = new Vector2(Mathf.Cos(rad), Mathf.Sin(rad));
-
-        // 速度 = 方向 × 速率
-        rb.velocity = dir * launchSpeed;
+        rb.velocity = new Vector2(Mathf.Cos(rad), Mathf.Sin(rad)) * currentSpeed;
     }
-    private float accumulator = 0f;
-    public float maxSpeed = 10f;
-    public float speedUpInterval = 1f;
-    public float speedUpMultiplier = 1.05f;
-    void FixedUpdate()
+
+    void OnCollisionEnter2D(Collision2D col)
     {
-        accumulator += Time.fixedDeltaTime;
-        if (accumulator > speedUpInterval)
+        if (!col.gameObject.CompareTag("Paddle")) return;
+
+        // 留出足够空间;GetContacts 用预分配数组,不产生堆分配(GC 友好)
+        int count = col.GetContacts(contactBuffer);
+
+        bool hitFromAbove = false;
+        for (int i = 0; i < count; i++)
         {
-            float magV = rb.velocity.magnitude;
-            float newMagV = Mathf.Min(magV * speedUpMultiplier, maxSpeed);
-            if (newMagV > magV + 0.001f)
-                rb.velocity = rb.velocity.normalized * newMagV;
-            accumulator -= speedUpInterval;
+            if (contactBuffer[i].normal.y > 0.5f) { hitFromAbove = true; break; }
         }
+        if (!hitFromAbove) return;   // 撞的是侧面/底面 → 交给物理引擎自己处理
+
+        float halfWidth = col.collider.bounds.extents.x;   // bounds 是世界空间
+        if (halfWidth <= 0.0001f) return;                  // 防除零
+
+        // 撞击点相对挡板中心的偏移,归一化到 [-1, 1]
+        float offset = (rb.position.x - col.transform.position.x) / halfWidth;
+        offset = Mathf.Clamp(offset, -1f, 1f);
+
+        // 角度从竖直方向量起 → 用 (sin, cos)。
+        // cos(θ) 在 |θ|<90° 时恒正,所以球【结构上】不可能向下飞,无需额外 clamp。
+        float rad = offset * maxBounceAngle * Mathf.Deg2Rad;
+        Vector2 dir = new Vector2(Mathf.Sin(rad), Mathf.Cos(rad));
+
+        rb.velocity = dir * currentSpeed;   // 用自己维护的速率,不现取
     }
 
-    // ★ 重点:这里【没有】FixedUpdate,也【不该】有。
-    //
-    // 为什么设速度不需要 FixedUpdate?
-    //   因为 velocity 是刚体自己的【状态】,赋一次值,物理引擎就会在之后的
-    //   每个物理步里按它继续积分位移。我们不需要每帧去"推"它。
-    //
-    // 那 FixedUpdate 到底什么时候非用不可?
-    //   —— 当你需要【持续地】修改物理状态时。例如:
-    //       · 每帧给刚体施加力:rb.AddForce(...)
-    //       · 让速度随时间变化:rb.velocity *= 1.01f
-    //       · 手动读取输入来控制物理物体(如角色移动)
-    //   这些操作必须踩在物理时钟上,用固定步长执行,结果才稳定可复现。
-    //
-    // 一句话:改一次状态 → Start/Update 里做;持续改状态 → FixedUpdate 里做。
-    // 注意:你【不会】在 Update 里改 transform 来移动带刚体的物体 ——
-    //       那等于绕过物理引擎直接改结果,会和引擎自己的积分打架,表现为抖动/穿墙。
 }
