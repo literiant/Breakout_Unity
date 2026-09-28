@@ -1,33 +1,33 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class BrickSpawner : MonoBehaviour
 {
-    public GameObject bp;
-    public int raw = 4;
-    public int column = 7;
-    public float topY = 1.8f;
+    [Header("生成源")]
+    [Tooltip("要复制的砖块预制体")]
+    public BrickController brickPrefab;
+    [Header("网格布局")]
+    [Tooltip("行数(从 topY 往下长)")]
+    public int rows = 4;
+    public int columns = 9;
+    public float topY = 3f;
+    public float gap = 0.05f;
+    public int maxBrickScore = 3;
     // Start is called before the first frame update
     void Start()
     {
-        float stepX = bp.transform.localScale.x + 0.05f;
-        float stepY = bp.transform.localScale.y + 0.05f;
-        float startX = -(column - 1) * stepX / 2;
+        float stepX = brickPrefab.transform.localScale.x + gap;
+        float stepY = brickPrefab.transform.localScale.y + gap;
+        float startX = -(columns - 1) * stepX / 2;
 
-        for (int i = 0; i < raw; i++)
+        for (int i = 0; i < rows; i++)
         {
-            for (int j = 0; j < column; j++)
+            for (int j = 0; j < columns; j++)
             {
-                Vector2 position = new Vector2(startX + j * stepX, topY + i * stepY);
-                Instantiate(bp, position, Quaternion.identity, transform);
+                Vector2 position = new Vector2(startX + j * stepX, topY - i * stepY);
+                BrickController brick = Instantiate(brickPrefab, position, Quaternion.identity, transform);
+                brick.gameObject.name = $"brick[{i}][{j}]";
+                brick.brickScore = Mathf.Max(maxBrickScore - i, 1);
             }
         }
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-
     }
 }

@@ -9,12 +9,16 @@ using UnityEngine;
 
 public class BrickController : MonoBehaviour
 {
+    private SpriteRenderer _sr;
+
     [Header("身份识别")]
     [Tooltip("小球的 Tag。只有这个 Tag 撞过来才算数,防止被其他东西误拆")]
     public string ballTag = "Ball";
     [Header("最大撞击次数")]
     public int brickHealth = 2;
-    private SpriteRenderer _sr;
+    [Header("砖块分数")]
+    public int brickScore = 1;
+
     void Awake()
     {
         _sr = GetComponent<SpriteRenderer>();
@@ -39,6 +43,10 @@ public class BrickController : MonoBehaviour
         // 注意:Destroy 不是立即执行的,它把销毁请求排到【本帧末尾】统一处理。
         // 所以这一帧里 gameObject 其实还活着,下一帧才真正消失。
         if (currentHealth <= 0)
+        {
+            if (GameController.Instance != null)
+                GameController.Instance.ModifyScore(brickScore);
             Destroy(gameObject);
+        }
     }
 }
