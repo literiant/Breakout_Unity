@@ -764,9 +764,9 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1402171598}
+  - component: {fileID: 1402171599}
   - component: {fileID: 1402171597}
   - component: {fileID: 1402171600}
-  - component: {fileID: 1402171599}
   m_Layer: 0
   m_Name: Brick
   m_TagString: Brick
@@ -854,6 +854,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   ballTag: Ball
+  brickHealth: 2
 --- !u!61 &1402171600
 BoxCollider2D:
   m_ObjectHideFlags: 0
