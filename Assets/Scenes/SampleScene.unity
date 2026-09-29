@@ -221,8 +221,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 149410705b360b541895148f9cc1b6ef, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  paddle: {fileID: 541078206}
   launchSpeed: 6
-  launchAngle: 60
   maxBounceAngle: 60
 --- !u!58 &278854324
 CircleCollider2D:
@@ -688,6 +688,7 @@ GameObject:
   m_Component:
   - component: {fileID: 815942595}
   - component: {fileID: 815942596}
+  - component: {fileID: 815942597}
   m_Layer: 0
   m_Name: DeathZone
   m_TagString: Untagged
@@ -755,6 +756,19 @@ BoxCollider2D:
   serializedVersion: 2
   m_Size: {x: 13.6176, y: 0.5}
   m_EdgeRadius: 0
+--- !u!114 &815942597
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 815942594}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fdb4445964981f343a84ae96976999fb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ballTag: Ball
 --- !u!1 &848602895
 GameObject:
   m_ObjectHideFlags: 0
@@ -855,7 +869,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 935463584601774293, guid: f2830f787afad514091391a2203d7223, type: 3}
       propertyPath: m_Name
-      value: GameControler
+      value: GameController
+      objectReference: {fileID: 0}
+    - target: {fileID: 5670709602853066597, guid: f2830f787afad514091391a2203d7223, type: 3}
+      propertyPath: _score
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

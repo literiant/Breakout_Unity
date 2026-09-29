@@ -7,12 +7,13 @@ using UnityEngine;
 [RequireComponent(typeof(Rigidbody2D))]   // 没有刚体就自动补一个,避免 GetComponent 拿到 null
 public class BallController : MonoBehaviour
 {
+    [Header("依赖挡板")]
+    [Tooltip("在未发射时,附着于挡板上侧")]
+    public PaddleController paddle;
+    private string paddleTag;
     [Header("发射参数")]
     [Tooltip("发射速率(单位/秒),只决定快慢")]
     public float launchSpeed = 6f;
-
-    private float launchAngle;
-
     // 缓存刚体引用。GetComponent 有查找开销,别在每帧里反复调用。
     private Rigidbody2D rb;
 
@@ -28,23 +29,26 @@ public class BallController : MonoBehaviour
     [Range(0f, 80f)]
     public float maxBounceAngle = 60f;
 
-    private float currentSpeed;        // 速率由我们自己维护(单一真相源)
+    public float CurrentSpeed { get; private set; }      // 速率由我们自己维护(单一真相源)
+
     private ContactPoint2D[] contactBuffer = new ContactPoint2D[4];   // 预分配,避免每次碰撞都产生垃圾
     private Vector2 startPosition;
     private bool isLaunched = false;
     void Start()
     {
-        currentSpeed = launchSpeed;
+        paddleTag = paddle.tag;
+        CurrentSpeed = launchSpeed;
         startPosition = rb.position;
         ResetBall();
     }
     void Update()
     {
-        HandlerKey();
+        StickToPaddle();
+        HandleInput();
     }
     void OnCollisionEnter2D(Collision2D col)
     {
-        if (!col.gameObject.CompareTag("Paddle")) return;
+        if (!col.gameObject.CompareTag(paddleTag)) return;
 
         // 留出足够空间;GetContacts 用预分配数组,不产生堆分配(GC 友好)
         int count = col.GetContacts(contactBuffer);
@@ -68,7 +72,7 @@ public class BallController : MonoBehaviour
         float rad = offset * maxBounceAngle * Mathf.Deg2Rad;
         Vector2 dir = new Vector2(Mathf.Sin(rad), Mathf.Cos(rad));
 
-        rb.velocity = dir * currentSpeed;   // 用自己维护的速率,不现取
+        rb.velocity = dir * CurrentSpeed;   // 用自己维护的速率,不现取
     }
     public void ResetBall()
     {
@@ -80,11 +84,20 @@ public class BallController : MonoBehaviour
     {
         isLaunched = true;
         float rad = Random.Range(30f, 150f) * Mathf.Deg2Rad;
-        rb.velocity = new Vector2(Mathf.Cos(rad), Mathf.Sin(rad)) * currentSpeed;
+        rb.velocity = new Vector2(Mathf.Cos(rad), Mathf.Sin(rad)) * CurrentSpeed;
     }
-    private void HandlerKey()
+    private void HandleInput()
     {
         if (!isLaunched && Input.GetKeyDown(KeyCode.Space))
             LaunchBall();
+    }
+    private void StickToPaddle()
+    {
+        if (isLaunched) return;
+        rb.transform.position = new Vector2(paddle.transform.position.x, rb.position.y);
+    }
+    public void ModifySpeed(float amount)
+    {
+        CurrentSpeed = Mathf.Clamp(CurrentSpeed += amount, 0f, launchSpeed * 1.5f);
     }
 }

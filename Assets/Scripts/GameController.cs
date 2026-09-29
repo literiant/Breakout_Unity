@@ -16,7 +16,18 @@ public class GameController : MonoBehaviour
     [Tooltip("当前分数。属性而非字段 —— 外部只能通过 ModifyScore 修改")]
     [SerializeField]
     private int _score;
+
+
     public int Score { get => _score; private set => _score = value; }
+
+    [Header("生命")]
+    [SerializeField]
+    private int _lives = 3;
+    public int Lives { get => _lives; private set => _lives = value; }
+
+    [Header("球体依赖")]
+    [SerializeField]
+    private BallController _ball;
 
     void Awake()
     {
@@ -37,5 +48,22 @@ public class GameController : MonoBehaviour
     {
         Score += amount;
         Debug.Log($"当前分数:{Score}");
+    }
+    public void ModifyLife(int amount)
+    {
+        Lives += amount;
+        Debug.Log($"当前生命{Lives}");
+    }
+    public void OnBallLost()
+    {
+        ModifyLife(-1);
+        if (Lives <= 0) Debug.Log("游戏结束");
+        else
+        {
+            _ball.ResetBall();
+            _ball.ModifySpeed(_ball.CurrentSpeed * 0.1f);
+        }
+
+
     }
 }
