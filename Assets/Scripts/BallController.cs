@@ -11,8 +11,7 @@ public class BallController : MonoBehaviour
     [Tooltip("发射速率(单位/秒),只决定快慢")]
     public float launchSpeed = 6f;
 
-    [Tooltip("发射角度(度):0=正右方,90=正上方")]
-    public float launchAngle = 60f;
+    private float launchAngle;
 
     // 缓存刚体引用。GetComponent 有查找开销,别在每帧里反复调用。
     private Rigidbody2D rb;
@@ -31,14 +30,18 @@ public class BallController : MonoBehaviour
 
     private float currentSpeed;        // 速率由我们自己维护(单一真相源)
     private ContactPoint2D[] contactBuffer = new ContactPoint2D[4];   // 预分配,避免每次碰撞都产生垃圾
-
+    private Vector2 startPosition;
+    private bool isLaunched = false;
     void Start()
     {
         currentSpeed = launchSpeed;
-        float rad = launchAngle * Mathf.Deg2Rad;
-        rb.velocity = new Vector2(Mathf.Cos(rad), Mathf.Sin(rad)) * currentSpeed;
+        startPosition = rb.position;
+        ResetBall();
     }
-
+    void Update()
+    {
+        HandlerKey();
+    }
     void OnCollisionEnter2D(Collision2D col)
     {
         if (!col.gameObject.CompareTag("Paddle")) return;
@@ -67,5 +70,21 @@ public class BallController : MonoBehaviour
 
         rb.velocity = dir * currentSpeed;   // 用自己维护的速率,不现取
     }
-
+    public void ResetBall()
+    {
+        isLaunched = false;
+        transform.position = startPosition;
+        rb.velocity = Vector2.zero;
+    }
+    private void LaunchBall()
+    {
+        isLaunched = true;
+        float rad = Random.Range(30f, 150f) * Mathf.Deg2Rad;
+        rb.velocity = new Vector2(Mathf.Cos(rad), Mathf.Sin(rad)) * currentSpeed;
+    }
+    private void HandlerKey()
+    {
+        if (!isLaunched && Input.GetKeyDown(KeyCode.Space))
+            LaunchBall();
+    }
 }
