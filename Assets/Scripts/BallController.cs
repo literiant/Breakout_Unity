@@ -94,7 +94,7 @@ public class BallController : MonoBehaviour
     private void StickToPaddle()
     {
         if (isLaunched) return;
-        rb.transform.position = new Vector2(paddle.transform.position.x, rb.position.y);
+        transform.position = new Vector2(paddle.transform.position.x, rb.position.y);
     }
     public void ModifySpeed(float amount)
     {

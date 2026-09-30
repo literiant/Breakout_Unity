@@ -1,4 +1,5 @@
 using UnityEngine;
+using TMPro;
 
 /// <summary>
 /// 全局游戏管理器 —— 挂载到场景中的空物体 "GameController" 上。
@@ -13,21 +14,25 @@ public class GameController : MonoBehaviour
     public static GameController Instance { get; private set; }
 
     [Header("分数")]
-    [Tooltip("当前分数。属性而非字段 —— 外部只能通过 ModifyScore 修改")]
+    [Tooltip("当前分数。字段 —— 外部只能通过 ModifyScore 修改")]
     [SerializeField]
     private int _score;
 
 
-    public int Score { get => _score; private set => _score = value; }
+    public int Score { get => _score; private set { _score = value; RefreshUI(); } }
 
     [Header("生命")]
     [SerializeField]
     private int _lives = 3;
-    public int Lives { get => _lives; private set => _lives = value; }
+    public int Lives { get => _lives; private set { _lives = value; RefreshUI(); } }
 
-    [Header("球体依赖")]
+    [Header("场景引用")]
     [SerializeField]
     private BallController _ball;
+
+    [Header("UI")]
+    [SerializeField] private TMP_Text _scoreText;
+    [SerializeField] private TMP_Text _livesText;
 
     void Awake()
     {
@@ -41,6 +46,7 @@ public class GameController : MonoBehaviour
         }
 
         Instance = this;
+        RefreshUI();
     }
 
     /// <summary>加分。分数只能通过这里增长,不允许外部直接赋值。</summary>
@@ -65,5 +71,13 @@ public class GameController : MonoBehaviour
         }
 
 
+    }
+    private void RefreshUI()
+    {
+        _scoreText.text = $"Score:{Score}";
+        _livesText.text = $"Lives:{Lives}";
+        Color initialColor = _livesText.color;
+        if (Lives <= 1) _livesText.color = Color.red;
+        else _livesText.color = initialColor;
     }
 }
