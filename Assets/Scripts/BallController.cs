@@ -19,6 +19,8 @@ public class BallController : MonoBehaviour
 
     void Awake()
     {
+        if (paddle == null)
+            Debug.LogError("BallController:没有指定挡板!", this);
         // 生命周期顺序:Awake → OnEnable → Start → Update / FixedUpdate
         // 在 Awake 里拿引用,能保证之后任何地方用 rb 都有效。
         rb = GetComponent<Rigidbody2D>();
@@ -94,6 +96,7 @@ public class BallController : MonoBehaviour
     private void StickToPaddle()
     {
         if (isLaunched) return;
+        //使用rb.position会有延迟拖影，而直接修改transform.position不会
         transform.position = new Vector2(paddle.transform.position.x, rb.position.y);
     }
     public void ModifySpeed(float amount)

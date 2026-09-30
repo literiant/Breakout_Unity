@@ -29,5 +29,7 @@ public class BrickSpawner : MonoBehaviour
                 brick.brickScore = Mathf.Max(maxBrickScore - i, 1);
             }
         }
+        if (GameController.Instance != null)
+            GameController.Instance.RegisterBricks(rows * columns);
     }
 }

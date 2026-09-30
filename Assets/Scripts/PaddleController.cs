@@ -64,8 +64,6 @@ public class PaddleController : MonoBehaviour
         // 正确做法:取出来 → 改副本 → 整体写回。
         Vector3 pos = transform.position;
 
-        if (Input.GetKeyDown(KeyCode.R))
-            pos.x = 0f;
 
         // Mathf.Clamp(值, 最小, 最大):把值夹在区间内,超出就取边界值。
         // 它等价于:
