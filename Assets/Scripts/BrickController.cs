@@ -56,6 +56,28 @@ public class BrickController : MonoBehaviour
         _fullColor = _sr.color;
     }
 
+    /// <summary>
+    /// 由 BrickSpawner 在 Instantiate 之后立刻调用,写入"这一行特有"的耐久 / 分值 / 颜色。
+    ///
+    /// ⚠️ 为什么必须有这个方法,而不能让生成器直接改 public 字段:
+    ///    Instantiate 会【同步】执行新对象的 Awake,而 Awake 里已经把
+    ///    _currentHealth = brickHealth、_fullColor = _sr.color 这两份"快照"算好了。
+    ///    之后再改 brickHealth 字段,_currentHealth 不会跟着变 —— 它已经拷走了。
+    ///    所以必须有一个显式入口,把字段和快照一起刷新。
+    ///
+    /// 这是"实例化后再配置实例"的标准做法:凡是 Awake 里做过初始化的脚本,
+    /// 想事后改它的初始值,都得留一个这样的入口。
+    /// </summary>
+    public void Setup(int health, int score, Color color)
+    {
+        brickHealth = health;
+        brickScore = score;
+
+        _currentHealth = health;   // 刷新 Awake 里拷贝出去的快照
+        _fullColor = color;        // 同上
+        _sr.color = color;         // 立刻上色,先看到颜色再谈打几下
+    }
+
     void OnCollisionEnter2D(Collision2D col)
     {
         if (_isDying) return;

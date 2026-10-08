@@ -22,6 +22,7 @@
 .DS_Store
 Thumbs.db
 
-# --- 个人 AI 上下文 ---
+# --- 个人 AI 学习上下文 ---
 CLAUDE.md
 自查清单.md
+学习路线.md
