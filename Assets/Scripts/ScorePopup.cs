@@ -1,10 +1,16 @@
+using System;
 using System.Collections;
 using TMPro;
 using UnityEngine;
 
 /// <summary>
 /// 单个飘分文字 —— 挂在 TMP 文本预制体 "ScorePopup" 上。
-/// 职责:生成后向上飘、同时淡出,飘完销毁自己。
+/// 职责:播一次"向上飘 + 淡出"的动画,播完【通知调用方】。
+///
+/// ⚠️ 它自己不 Destroy —— 因为对象池要把它收回去复用。
+///    "播完之后干什么"由调用方通过 onFinished 回调决定:
+///      池化版 → () => Release(popup)
+///      非池化 → () => Destroy(popup.gameObject)
 /// </summary>
 [RequireComponent(typeof(TMP_Text))]
 public class ScorePopup : MonoBehaviour
@@ -16,25 +22,28 @@ public class ScorePopup : MonoBehaviour
     [Tooltip("整个动画持续多少秒")]
     public float lifetime = 0.8f;
 
-    [Tooltip("初始缩放。小于 1 = 从小弹出来")]
+    [Tooltip("起始缩放,结束时回到 1.0")]
     public float startScale = 0.5f;
 
     private TMP_Text _text;
     private Color _color;
+    private Action _onFinished;
 
     void Awake()
     {
         _text = GetComponent<TMP_Text>();
     }
 
-    /// <summary>由生成器调用:填内容、上色、定位,然后开始飘。</summary>
-    public void Setup(string content, Color color, Vector3 screenPosition)
+    /// <summary>播一次飘分动画。onFinished 在动画结束时被调用(通常是"归还给池子")。</summary>
+    public void Play(string content, Color color, Vector3 screenPosition, Action onFinished)
     {
-        Debug.Log($"飘分已生成,屏幕位置 = {screenPosition}");
+        Debug.Log($"飘分复用,实例ID = {GetInstanceID()}");
+        // ========== 重设全部状态 ==========
+        // 池化的代价:借出来的对象带着上一次的残留。
+        // 所以这里每一行都必须重设,不能有任何"上次留下的"东西。
         _text.text = content;
 
-        // ⚠️ alpha 强制设为 1。关卡里的砖块颜色理论上不透明,但万一有人调了透明度,
-        //    飘分文字会跟着一起变透明 —— 那样就看不见了。这里不让它被传染。
+        // alpha 强制设为 1:不让关卡颜色的透明度传染过来
         _color = color;
         _color.a = 1f;
         _text.color = _color;
@@ -42,34 +51,45 @@ public class ScorePopup : MonoBehaviour
         transform.position = screenPosition;
         transform.localScale = Vector3.one * startScale;
 
+        _onFinished = onFinished;
+
+        // ⚠️ 池化后这句是必须的。
+        //    只要有任何一个流程提前把对象还回池子,上一次的协程就可能还在跑;
+        //    两套插值同时改同一个 transform,画面会抽搐。
+        //    先杀干净再开新的,成本近乎为零。
+        StopAllCoroutines();
         StartCoroutine(Animate());
     }
 
     private IEnumerator Animate()
     {
-        Vector3 start = transform.position;
-        Vector3 end = start + Vector3.up * riseDistance;
-        Vector3 VstartScale = transform.localScale * startScale;
-        Vector3 VendScale = transform.localScale;
+        Vector3 startPos = transform.position;
+        Vector3 endPos = startPos + Vector3.up * riseDistance;
+
+        // ⚠️ 起点和终点必须在【循环外】算好。
+        //    写在循环里现读 transform.localScale,每帧读到的都是上一帧被改过的值 ——
+        //    起点和终点会一起往下漂,结果就是"两三帧内缩成一个点"。
+        //    这和 BreakAnimation 是同一个套路:循环外定两端,循环里只插值。
+        Vector3 startScaleVec = Vector3.one * startScale;
+        Vector3 endScaleVec = Vector3.one;      // 结束时回到原尺寸
+
         float t = 0f;
         while (t < lifetime)
         {
             t += Time.deltaTime;
             float k = Mathf.Clamp01(t / lifetime);        // 进度 0 → 1
 
-            transform.position = Vector3.Lerp(start, end, k);
+            transform.position = Vector3.Lerp(startPos, endPos, k);
+            transform.localScale = Vector3.Lerp(startScaleVec, endScaleVec, k);
 
             Color c = _color;
             c.a = 1f - k;                                  // 淡出
             _text.color = c;
 
-            // TODO(填空练习):让它"弹出来"——
-            //   缩放从 startScale 涨到 1.0,用同一个 k 插值。
-            //   提示:和 BreakAnimation 里的 Vector3.Lerp 是同一个套路
-            transform.localScale = Vector3.Lerp(VstartScale, VendScale, k);
             yield return null;
         }
 
-        Destroy(gameObject);                               // 必须是最后一句 —— 销毁会终止协程
+        // 播完了 —— 不销毁自己,把决定权交给调用方
+        _onFinished?.Invoke();
     }
 }

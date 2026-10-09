@@ -1345,7 +1345,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 223906f4655a4bd4697807c5854b0a7a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  popupPrefab: {fileID: 0}
+  popupPrefab: {fileID: 8088936907372899599, guid: e7649268893825f43a3262a30ecb4548, type: 3}
+  prewarmCount: 0
 --- !u!1 &1932943831
 GameObject:
   m_ObjectHideFlags: 0
