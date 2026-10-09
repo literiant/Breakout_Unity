@@ -25,7 +25,7 @@ public class DeathZone : MonoBehaviour
         if (CameraShake.Instance != null)
             CameraShake.Instance.Shake(shakeIntensity, shakeDuration);
 
-        if (GameController.Instance != null)
-            GameController.Instance.OnBallLost();
+        // 只报告"球掉出去了"这个事实。扣命、重置球这些规则由订阅者决定。
+        GameEvents.RaiseBallLost();
     }
 }

@@ -29,6 +29,6 @@ MonoBehaviour:
     score: 1
     color: {r: 1, g: 1, b: 1, a: 1}
   - pattern: XHXHHHXHX
-    health: 4
-    score: 5
+    health: 1
+    score: 1
     color: {r: 1, g: 0, b: 0, a: 1}

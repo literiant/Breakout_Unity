@@ -105,9 +105,15 @@ public class BrickController : MonoBehaviour
     {
         _isDying = true;
 
-        // 先算分再播动画 —— 分数应该立刻到账,不该等动画播完
-        if (GameController.Instance != null)
-            GameController.Instance.OnBrickDestroyed(brickScore);
+        // 广播出去:砖块不认识 GameController,也不认识飘分文字 —— 它只报告"我碎了"。
+        // 谁关心谁自己订阅。以后加音效、成就、统计,都不用回来改这里。
+        Debug.Log("砖块碎了，准备广播");
+        GameEvents.RaiseBrickDestroyed(new BrickDestroyedEvent
+        {
+            position = transform.position,
+            score = brickScore,
+            color = _fullColor,
+        });
 
         // ⚠️ 立刻关掉碰撞体。
         //    否则这 0.18 秒动画期间球还能再撞上来一次,而"已死"的砖块再被撞会重复加分。

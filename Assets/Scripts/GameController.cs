@@ -79,6 +79,25 @@ public class GameController : MonoBehaviour
         RefreshUI();
     }
 
+    void OnEnable()
+    {
+        // 订阅全局事件。用 OnEnable / OnDisable 而不是 Awake / OnDestroy ——
+        // 它们在每次"启用 / 禁用"时成对调用,物体被临时关掉再打开也不会漏。
+        //
+        // ⚠️ 必须能退订,所以这里用具名方法,不能用 Lambda
+        //    (两次 Lambda 表达式是两个不同的对象,-= 匹配不上)。
+        GameEvents.BrickDestroyed += HandleBrickDestroyed;
+        GameEvents.BallLost += HandleBallLost;
+    }
+
+    void OnDisable()
+    {
+        // ⚠️ 静态事件跨场景存活,不退订就会留下指向"已销毁的 GameController"的悬挂引用。
+        //    下次事件触发时调用它的方法 → MissingReferenceException。
+        GameEvents.BrickDestroyed -= HandleBrickDestroyed;
+        GameEvents.BallLost -= HandleBallLost;
+    }
+
     void Start()
     {
         // 由 GameController 主动发起第一关,而不是让 BrickSpawner 在自己的 Start 里生成。
@@ -141,8 +160,8 @@ public class GameController : MonoBehaviour
         Lives += amount;
     }
 
-    /// <summary>球掉出场地 —— 由 DeathZone 调用。</summary>
-    public void OnBallLost()
+    /// <summary>事件回调:球掉出场地。由 DeathZone 广播,这里决定规则。</summary>
+    private void HandleBallLost()
     {
         if (IsGameOver) return;
 
@@ -158,12 +177,12 @@ public class GameController : MonoBehaviour
         _ball.ModifySpeed(_ball.CurrentSpeed * 0.1f);   // 每掉一条命,球更快一点
     }
 
-    /// <summary>一块砖被打碎 —— 由 BrickController 调用。</summary>
-    public void OnBrickDestroyed(int score)
+    /// <summary>事件回调:一块砖被打碎。由 BrickController 广播,这里决定规则。</summary>
+    private void HandleBrickDestroyed(BrickDestroyedEvent data)
     {
         if (IsGameOver) return;
 
-        ModifyScore(score);
+        ModifyScore(data.score);
         BricksRemaining -= 1;
 
         if (BricksRemaining > 0) return;
