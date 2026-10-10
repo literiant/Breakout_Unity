@@ -125,6 +125,18 @@ public class BrickController : MonoBehaviour
     }
 
     /// <summary>
+    /// 调试用:立刻打碎这块砖,走【完整的】碎裂流程(动画 + 计分 + 广播)。
+    ///
+    /// 为什么不直接 Destroy:那样不会触发事件,分数不涨、剩余砖块数不减、
+    /// 过关判定永远不触发 —— 那测的就不是真实流程了。
+    /// </summary>
+    public void ForceBreak()
+    {
+        if (_isDying) return;
+        Break();
+    }
+
+    /// <summary>
     /// 碎裂动画。协程:每帧缩小一点、淡出一点,跑完再销毁。
     /// </summary>
     private IEnumerator BreakAnimation()
