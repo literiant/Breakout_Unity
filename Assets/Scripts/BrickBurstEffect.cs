@@ -11,9 +11,11 @@ using UnityEngine;
 [RequireComponent(typeof(ParticleSystem))]
 public class BrickBurstEffect : MonoBehaviour
 {
-    [Header("爆发")]
+    [Header("单次粒子数")]
     [Tooltip("每块砖碎裂时迸发多少颗碎屑")]
     public int burstCount = 14;
+    [Tooltip("砖块受到伤害但不碎裂时迸发多少颗碎屑")]
+    public int DamagedBurstCount = 4;
 
     [Header("碎屑")]
     [Tooltip("初速度范围(世界单位/秒)")]
@@ -95,11 +97,13 @@ public class BrickBurstEffect : MonoBehaviour
     void OnEnable()
     {
         GameEvents.BrickDestroyed += HandleBrickDestroyed;
+        GameEvents.BrickDamaged += HandleBrickDamaged;
     }
 
     void OnDisable()
     {
         GameEvents.BrickDestroyed -= HandleBrickDestroyed;
+        GameEvents.BrickDamaged -= HandleBrickDamaged;
     }
 
     private void HandleBrickDestroyed(BrickDestroyedEvent data)
@@ -111,5 +115,12 @@ public class BrickBurstEffect : MonoBehaviour
         // ⚠️ 因为 simulationSpace = World,搬动系统【不会】影响已经飞出去的碎屑。
         transform.position = data.position;
         _ps.Emit(burstCount);
+    }
+    private void HandleBrickDamaged(BrickDamagedEvent data)
+    {
+        var main = _ps.main;
+        main.startColor = data.color;
+        transform.position = data.position;
+        _ps.Emit(DamagedBurstCount);
     }
 }

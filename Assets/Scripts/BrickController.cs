@@ -97,6 +97,14 @@ public class BrickController : MonoBehaviour
         float ratio = (float)_currentHealth / brickHealth;
         _sr.color = new Color(_fullColor.r * ratio, _fullColor.g * ratio, _fullColor.b * ratio, 1f);
 
+        // 广播"被撞但没碎" —— 音效要轻响、粒子要少量。
+        // 注意:飘分和计分的订阅者【不】监听这个事件,所以它们不会误触发。
+        GameEvents.RaiseBrickDamaged(new BrickDamagedEvent
+        {
+            position = transform.position,
+            color = _fullColor,
+        });
+
         Shake(shakeOnHit);
     }
 
@@ -107,7 +115,6 @@ public class BrickController : MonoBehaviour
 
         // 广播出去:砖块不认识 GameController,也不认识飘分文字 —— 它只报告"我碎了"。
         // 谁关心谁自己订阅。以后加音效、成就、统计,都不用回来改这里。
-        Debug.Log("砖块碎了，准备广播");
         GameEvents.RaiseBrickDestroyed(new BrickDestroyedEvent
         {
             position = transform.position,

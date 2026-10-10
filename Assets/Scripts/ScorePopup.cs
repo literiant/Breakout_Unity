@@ -37,7 +37,6 @@ public class ScorePopup : MonoBehaviour
     /// <summary>播一次飘分动画。onFinished 在动画结束时被调用(通常是"归还给池子")。</summary>
     public void Play(string content, Color color, Vector3 screenPosition, Action onFinished)
     {
-        Debug.Log($"飘分复用,实例ID = {GetInstanceID()}");
         // ========== 重设全部状态 ==========
         // 池化的代价:借出来的对象带着上一次的残留。
         // 所以这里每一行都必须重设,不能有任何"上次留下的"东西。

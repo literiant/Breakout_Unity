@@ -10,6 +10,8 @@ public class BallController : MonoBehaviour
     [Header("依赖挡板")]
     [Tooltip("在未发射时,附着于挡板上侧")]
     public PaddleController paddle;
+    [Tooltip("墙的 Tag。撞到时广播 WallHit 事件")]
+    public string wallTag = "Wall";
     private string paddleTag;
     [Header("发射参数")]
     [Tooltip("发射速率(单位/秒),只决定快慢")]
@@ -50,6 +52,14 @@ public class BallController : MonoBehaviour
     }
     void OnCollisionEnter2D(Collision2D col)
     {
+        // 撞到墙:只【报告事实】,不改变球的运动 —— 反弹交给物理引擎。
+        // 墙面是 Untagged 的话这个分支不会进,记得给三面墙打上 Wall 标签。
+        if (col.gameObject.CompareTag(wallTag))
+        {
+            GameEvents.RaiseWallHit(rb.position);
+            return;
+        }
+
         if (!col.gameObject.CompareTag(paddleTag)) return;
 
         // 留出足够空间;GetContacts 用预分配数组,不产生堆分配(GC 友好)

@@ -191,7 +191,7 @@ public class GameController : MonoBehaviour
         if (_currentLevelIndex + 1 < _levels.Length)
             StartCoroutine(GoToNextLevel());
         else
-            EndGame("通关!", true);
+            EndGame("Success!", true);
     }
 
     // ==================== 结束与重开 ====================
@@ -212,7 +212,7 @@ public class GameController : MonoBehaviour
 
     public void Win()
     {
-        if (!IsGameOver) EndGame("通关!", true);
+        if (!IsGameOver) EndGame("Success!", true);
     }
 
     public void GameOver()
@@ -220,15 +220,30 @@ public class GameController : MonoBehaviour
         if (!IsGameOver) EndGame("Game Over", false);
     }
 
+    // 「寄存 → 修改 → 恢复」的寄存器。
+    // 同一个模式你已经用过两次:_fullColor(砖块原始颜色)、_livesDefaultColor(生命文本原始颜色)。
+    private float _timeScaleBeforePause = 1f;
+
     private void TogglePause()
     {
         // ⚠️ 用 > 0 而不是 == 0 判断。浮点数比相等是不可靠的写法,
         //    而且以后若有人把 timeScale 调成 0.5(慢动作),"是否暂停"的判断也不该崩。
         bool pauseNow = Time.timeScale > 0f;
 
-        Time.timeScale = pauseNow ? 0f : 1f;
+        if (pauseNow)
+        {
+            // 暂停:先【寄存】当前时率,再归零
+            _timeScaleBeforePause = Time.timeScale;
+            Time.timeScale = 0f;
+        }
+        else
+        {
+            // 恢复:用【寄存下来的那个值】,而不是写死 1f
+            // —— 否则"慢动作 → 暂停 → 恢复"会把 0.25 丢掉,直接跳回正常速度
+            Time.timeScale = _timeScaleBeforePause;
+        }
 
-        _messageText.text = pauseNow ? "已暂停" : "";
+        _messageText.text = pauseNow ? "Paused" : "";
         _messageText.gameObject.SetActive(pauseNow);
     }
 

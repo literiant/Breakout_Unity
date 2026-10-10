@@ -15,6 +15,19 @@ public struct BrickDestroyedEvent
 }
 
 /// <summary>
+/// 砖块被撞到但【还没碎】时广播出去的数据。
+///
+/// 为什么单独一个事件而不是给 BrickDestroyed 加个 bool 参数:
+///   "被打了一下"和"被打碎了"是两种不同的【事实】,
+///   听众也完全不同 —— 音效要轻响、粒子要少量、飘分和计分则完全不该响应。
+/// </summary>
+public struct BrickDamagedEvent
+{
+    public Vector2 position;
+    public Color color;
+}
+
+/// <summary>
 /// 全局事件中心。
 ///
 /// 为什么需要它:
@@ -37,18 +50,24 @@ public static class GameEvents
     /// <summary>球撞到挡板。参数:撞击点位置(以后做音效定位、粒子迸发都用得上)。</summary>
     public static event Action<Vector2> PaddleHit;
 
+    /// <summary>球撞到墙。</summary>
+    public static event Action<Vector2> WallHit;
+
+    /// <summary>砖块被撞到但还没碎。</summary>
+    public static event Action<BrickDamagedEvent> BrickDamaged;
+
     /// <summary>游戏结束。参数:true = 通关,false = 失败。</summary>
     public static event Action<bool> GameEnded;
 
     // ⚠️ 用方法而不是让外部直接 Invoke —— event 关键字保证了外部【不能】直接触发,
     //    只有这两个方法能广播。这就是 event 相比普通委托字段的全部价值:
     //    "谁都能听,但只有主人能说"。
+    // ⚠️ 这里的 ?. 是【正确】的。
+    //    Unity 对象不能用 ?. 判空,是因为 ?. 绕过 Unity 重载的 ==。
+    //    但 Action<T> 是纯 C# 委托,不是 UnityEngine.Object —— 它没有重载 ==。
+    //    没有订阅者时直接 Invoke() 会 NullReferenceException,所以 ?. 必须写。
     public static void RaiseBrickDestroyed(BrickDestroyedEvent data)
     {
-        // ⚠️ 这里的 ?. 是【正确】的。
-        //    Unity 对象不能用 ?. 判空,是因为 ?. 绕过 Unity 重载的 ==。
-        //    但 Action<T> 是纯 C# 委托,不是 UnityEngine.Object —— 它没有重载 ==。
-        //    没有订阅者时直接 Invoke() 会 NullReferenceException,所以 ?. 必须写。
         BrickDestroyed?.Invoke(data);
     }
 
@@ -60,6 +79,16 @@ public static class GameEvents
     public static void RaisePaddleHit(Vector2 position)
     {
         PaddleHit?.Invoke(position);
+    }
+
+    public static void RaiseWallHit(Vector2 position)
+    {
+        WallHit?.Invoke(position);
+    }
+
+    public static void RaiseBrickDamaged(BrickDamagedEvent data)
+    {
+        BrickDamaged?.Invoke(data);
     }
 
     public static void RaiseGameEnded(bool won)

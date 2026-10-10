@@ -63,17 +63,36 @@ public static class SfxLibrary
     }
 
     /// <summary>
-    /// 白噪声 + 衰减 —— "啪""碎"这类打击音。噪声没有音高,听起来像"材质"而不是"音符"。
+    /// 白噪声 + 指数衰减 + 【低通滤波】—— "啪""碎"这类打击音。
+    /// 噪声没有音高,听起来像"材质"而不是"音符"。
+    ///
+    /// ⚠️ 为什么要滤波:
+    ///   纯白噪声包含【所有频率】,听起来是"嘶——",又刺耳又廉价。
+    ///   真实的撞击声是被材质吸收过的 —— 高频先被吃掉。
+    ///   一个一阶低通就能把"电子噪声"变成"木头/塑料碎裂"。
     /// </summary>
-    public static AudioClip Noise(string name, float duration, float volume = 0.4f)
+    /// <param name="smooth">滤波强度。越接近 1 越亮(越刺耳),越小越闷。0.25 左右比较像木头</param>
+    public static AudioClip Noise(string name, float duration, float volume = 0.4f, float smooth = 0.25f)
     {
         int count = Mathf.RoundToInt(SampleRate * duration);
         float[] data = new float[count];
 
+        float filtered = 0f;   // 滤波器的"记忆" —— 上一次的输出
+
         for (int i = 0; i < count; i++)
         {
-            float envelope = 1f - (float)i / count;
-            data[i] = Random.Range(-1f, 1f) * envelope * volume;   // -1 ~ 1 的随机值 = 白噪声
+            float k = (float)i / count;
+
+            // 指数衰减包络。比线性衰减更像真实撞击:起始猛、尾巴短。
+            // 原来的线性衰减会让声音"拖"到最后才断,听感发糊。
+            float envelope = Mathf.Exp(-6f * k);
+
+            // 一阶低通(指数移动平均):
+            //   filtered 慢慢"追"当前的噪声值。smooth 越小追得越慢,高频被削得越多。
+            float noise = Random.Range(-1f, 1f);
+            filtered += (noise - filtered) * smooth;
+
+            data[i] = filtered * envelope * volume;
         }
 
         return Build(name, data);

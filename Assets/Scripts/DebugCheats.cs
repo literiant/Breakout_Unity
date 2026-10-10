@@ -27,6 +27,9 @@ public class DebugCheats : MonoBehaviour
     [Tooltip("在指定位置手动广播一次碎砖事件 —— 测飘分 / 粒子 / 音效")]
     public KeyCode fakeBrickKey = KeyCode.B;
 
+    [Tooltip("子弹时间")]
+    public KeyCode toggleSlowTimeScaleKey = KeyCode.T;
+
     [Header("假事件参数")]
     [Tooltip("从哪个世界坐标发出")]
     public Vector2 fakeBrickPosition = new Vector2(0f, 1.5f);
@@ -39,6 +42,7 @@ public class DebugCheats : MonoBehaviour
         if (Input.GetKeyDown(bombAllKey)) BombAllBricks();
         if (Input.GetKeyDown(addLifeKey)) AddLife();
         if (Input.GetKeyDown(fakeBrickKey)) FakeBrickDestroyed();
+        if (Input.GetKeyDown(toggleSlowTimeScaleKey)) toggleSlowTimeScale();
     }
 
     private void BombAllBricks()
@@ -76,6 +80,16 @@ public class DebugCheats : MonoBehaviour
             color = Color.cyan,
         });
         Debug.Log("[调试] 手动广播了一次碎砖事件");
+    }
+    private void toggleSlowTimeScale()
+    {
+        if (Time.timeScale == 0f)
+        {
+            Debug.Log("暂停中,不能变时率");
+            return;
+        }
+        bool isNotSlow = Time.timeScale == 1.0f;
+        Time.timeScale = isNotSlow ? 0.25f : 1.0f;
     }
 }
 #endif
