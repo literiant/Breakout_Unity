@@ -75,6 +75,9 @@ public class BallController : MonoBehaviour
         Vector2 dir = new Vector2(Mathf.Sin(rad), Mathf.Cos(rad));
 
         rb.velocity = dir * CurrentSpeed;   // 用自己维护的速率,不现取
+
+        // 广播出去 —— 球只管"我撞到挡板了",谁想听(音效、粒子、连击)自己去订阅
+        GameEvents.RaisePaddleHit(rb.position);
     }
     public void ResetBall()
     {

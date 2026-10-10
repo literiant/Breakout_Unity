@@ -191,13 +191,13 @@ public class GameController : MonoBehaviour
         if (_currentLevelIndex + 1 < _levels.Length)
             StartCoroutine(GoToNextLevel());
         else
-            EndGame("通关!");
+            EndGame("通关!", true);
     }
 
     // ==================== 结束与重开 ====================
 
     /// <summary>Win / GameOver 的公共部分 —— 两种结局只有文案不同,其余完全一样。</summary>
-    private void EndGame(string message)
+    private void EndGame(string message, bool won)
     {
         IsGameOver = true;
         _messageText.text = message;
@@ -205,16 +205,19 @@ public class GameController : MonoBehaviour
 
         _ball.ResetBall();
         _ball.enabled = false;      // 关掉球这一个组件 → Update 和碰撞回调都不再派发
+
+        // 广播结局。音效、成就、结算界面都可以自己来听。
+        GameEvents.RaiseGameEnded(won);
     }
 
     public void Win()
     {
-        if (!IsGameOver) EndGame("通关!");
+        if (!IsGameOver) EndGame("通关!", true);
     }
 
     public void GameOver()
     {
-        if (!IsGameOver) EndGame("Game Over");
+        if (!IsGameOver) EndGame("Game Over", false);
     }
 
     private void TogglePause()

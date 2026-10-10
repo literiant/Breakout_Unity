@@ -34,6 +34,12 @@ public static class GameEvents
     /// <summary>球掉出场地。</summary>
     public static event Action BallLost;
 
+    /// <summary>球撞到挡板。参数:撞击点位置(以后做音效定位、粒子迸发都用得上)。</summary>
+    public static event Action<Vector2> PaddleHit;
+
+    /// <summary>游戏结束。参数:true = 通关,false = 失败。</summary>
+    public static event Action<bool> GameEnded;
+
     // ⚠️ 用方法而不是让外部直接 Invoke —— event 关键字保证了外部【不能】直接触发,
     //    只有这两个方法能广播。这就是 event 相比普通委托字段的全部价值:
     //    "谁都能听,但只有主人能说"。
@@ -49,5 +55,15 @@ public static class GameEvents
     public static void RaiseBallLost()
     {
         BallLost?.Invoke();
+    }
+
+    public static void RaisePaddleHit(Vector2 position)
+    {
+        PaddleHit?.Invoke(position);
+    }
+
+    public static void RaiseGameEnded(bool won)
+    {
+        GameEnded?.Invoke(won);
     }
 }
