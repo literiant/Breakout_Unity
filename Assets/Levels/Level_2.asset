@@ -35,4 +35,4 @@ MonoBehaviour:
   - pattern: XXXXXXXXX
     health: 2
     score: 1
-    color: {r: 0, g: 0.30690932, b: 1, a: 0}
+    color: {r: 0, g: 1, b: 0.7597439, a: 1}

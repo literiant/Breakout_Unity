@@ -425,8 +425,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   paddle: {fileID: 541078206}
+  wallTag: Wall
   launchSpeed: 6
   maxBounceAngle: 60
+  minAngleFromHorizontal: 20
 --- !u!58 &278854324
 CircleCollider2D:
   m_ObjectHideFlags: 0
@@ -632,7 +634,7 @@ GameObject:
   - component: {fileID: 376844822}
   m_Layer: 0
   m_Name: Wall_Left
-  m_TagString: Untagged
+  m_TagString: Wall
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -960,7 +962,7 @@ GameObject:
   - component: {fileID: 561848387}
   m_Layer: 0
   m_Name: Wall_Right
-  m_TagString: Untagged
+  m_TagString: Wall
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -5988,6 +5990,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   burstCount: 14
+  DamagedBurstCount: 4
   speedRange: {x: 2, y: 6}
   sizeRange: {x: 0.06, y: 0.16}
   lifetime: 0.6
@@ -6195,7 +6198,57 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   popupPrefab: {fileID: 8088936907372899599, guid: e7649268893825f43a3262a30ecb4548, type: 3}
-  prewarmCount: 0
+  prewarmCount: 8
+--- !u!1 &1553289938
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1553289940}
+  - component: {fileID: 1553289939}
+  m_Layer: 0
+  m_Name: DebugCheats
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1553289939
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1553289938}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 87bf23b2808fc1649bb8d7699103e34f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  bombAllKey: 107
+  addLifeKey: 108
+  fakeBrickKey: 98
+  toggleSlowTimeScaleKey: 116
+  fakeBrickPosition: {x: 0, y: 1.5}
+  fakeBrickScore: 1
+--- !u!4 &1553289940
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1553289938}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1673739897
 GameObject:
   m_ObjectHideFlags: 0
@@ -6227,8 +6280,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   masterVolume: 0.6
-  brickVolume: 0.5
+  voiceCount: 8
+  pitchJitter: 0.08
+  brickBreakVolume: 0.5
+  brickDamageVolume: 0.35
   paddleFrequency: 520
+  wallFrequency: 380
   ballLostStartFreq: 700
   ballLostEndFreq: 120
 --- !u!82 &1673739899
@@ -6336,7 +6393,7 @@ Transform:
   m_GameObject: {fileID: 1673739897}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 18.281445, y: 11.681203, z: -0.08192167}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -6563,11 +6620,11 @@ PrefabInstance:
     - target: {fileID: 5670709602853066597, guid: f2830f787afad514091391a2203d7223, type: 3}
       propertyPath: _levels.Array.data[1]
       value: 
-      objectReference: {fileID: 11400000, guid: 9701ad5710bb62a45944b6a1821880ac, type: 2}
+      objectReference: {fileID: 11400000, guid: 87c04298ab79e6e47820a67952d12cae, type: 2}
     - target: {fileID: 5670709602853066597, guid: f2830f787afad514091391a2203d7223, type: 3}
       propertyPath: _levels.Array.data[2]
       value: 
-      objectReference: {fileID: 11400000, guid: 87c04298ab79e6e47820a67952d12cae, type: 2}
+      objectReference: {fileID: 11400000, guid: 9701ad5710bb62a45944b6a1821880ac, type: 2}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -6585,7 +6642,7 @@ GameObject:
   - component: {fileID: 1978604264}
   m_Layer: 0
   m_Name: Wall_Top
-  m_TagString: Untagged
+  m_TagString: Wall
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -6804,3 +6861,4 @@ SceneRoots:
   - {fileID: 104693462}
   - {fileID: 1673739900}
   - {fileID: 798067972}
+  - {fileID: 1553289940}

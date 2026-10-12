@@ -119,7 +119,10 @@ public class BrickController : MonoBehaviour
         {
             position = transform.position,
             score = brickScore,
-            color = _fullColor,
+            // ⚠️ 用【当前】颜色,不是 _fullColor。
+            //    砖块被打过之后视觉上已经变了,_fullColor 是开局捕获的原始色 ——
+            //    用它会导致碎屑和飘分显示一个"砖块此刻已经不是"的颜色。
+            color = _sr.color,
         });
 
         // ⚠️ 立刻关掉碰撞体。

@@ -33,6 +33,13 @@ public class BallController : MonoBehaviour
     [Range(0f, 80f)]
     public float maxBounceAngle = 60f;
 
+    [Header("角度校正")]
+    [Tooltip("球与水平方向的最小夹角(度)。防止球陷入'太平'的轨迹")]
+    [Range(0f, 45f)]
+    public float minAngleFromHorizontal = 20f;
+    [Tooltip("球与水平方向的最大夹角(度)。防止球陷入'太直'的轨迹")]
+    [Range(70f, 90f)]
+    public float maxAngleFromHorizontal = 80f;
     public float CurrentSpeed { get; private set; }      // 速率由我们自己维护(单一真相源)
 
     private ContactPoint2D[] contactBuffer = new ContactPoint2D[4];   // 预分配,避免每次碰撞都产生垃圾
@@ -49,6 +56,24 @@ public class BallController : MonoBehaviour
     {
         StickToPaddle();
         HandleInput();
+    }
+
+    /// <summary>
+    /// 角度校正 —— 每个物理步检查一次球的方向。
+    ///
+    /// ⚠️ 为什么放 FixedUpdate 而不是 Update:
+    ///   这是在【改刚体的速度】,不是读输入、也不是做表现。刚体操作必须跟物理时钟走。
+    ///   Update 是渲染帧(间隔不固定),FixedUpdate 是固定步长(默认 0.02s) ——
+    ///   这正是本项目的高频考点:**输入/表现 → Update;刚体受力/速度 → FixedUpdate。**
+    ///
+    ///   顺带:写在 FixedUpdate 里就意味着"任何原因导致的速度变化都会被校正",
+    ///   不管是撞挡板、撞墙、还是撞砖块 —— 不需要给每个碰撞回调都加一行。
+    /// </summary>
+    void FixedUpdate()
+    {
+        // ⚠️ rb.velocity 是属性,整体赋值 ✅;改它的成员(如 rb.velocity.x = ...)❌ 不生效。
+        //    (Vector2 是 struct,这个坑你在 L2 踩过:rb.velocity.Set(0, 0))
+        rb.velocity = ClampAngle(rb.velocity, minAngleFromHorizontal, maxAngleFromHorizontal);
     }
     void OnCollisionEnter2D(Collision2D col)
     {
@@ -112,6 +137,50 @@ public class BallController : MonoBehaviour
         //使用rb.position会有延迟拖影，而直接修改transform.position不会
         transform.position = new Vector2(paddle.transform.position.x, rb.position.y);
     }
+    /// <summary>
+    /// 把速度方向校正到"离水平至少 minAngleDeg 度"。
+    ///
+    /// 为什么需要它 —— 这是本包的核心:
+    ///   球撞墙和撞砖是【纯物理反射】:bounciness = 1、friction = 0,
+    ///   入射角恒等于反射角,**角度永不衰减**。
+    ///   所以球一旦被弹成浅角,就会一辈子保持浅角 —— 打不出变化,而且浅角还容易穿透薄碰撞体。
+    ///
+    ///   物理引擎不管"好不好玩",它只管守恒。**手感是程序的责任。**
+    ///
+    /// 做法(避开角度归一化的所有麻烦):
+    ///   归一化方向 (x, y) 满足 x² + y² = 1,所以 |y| = |sin θ|(θ = 与水平方向的夹角)。
+    ///   "夹角太水平" 等价于 "|y| 太小" —— 不用碰 atan2,也不用处理角度绕圈。
+    ///   把 |y| 抬到最小值,再用勾股恒等式反推 x。
+    /// </summary>
+    private static Vector2 ClampAngle(Vector2 velocity, float minAngleDeg, float maxAngleFromHorizontal)
+    {
+        float speed = velocity.magnitude;
+        if (speed < 0.0001f) return velocity;              // 几乎静止 → 不碰它
+
+        Vector2 dir = velocity / speed;                    // 归一化方向
+
+        float minY = Mathf.Sin(minAngleDeg * Mathf.Deg2Rad);
+        float maxY = Mathf.Sin(maxAngleFromHorizontal * Mathf.Deg2Rad);
+        // 保留原来的方向感:球是往上还是往下、往左还是往右
+        float signY = dir.y >= 0f ? 1f : -1f;
+        float signX = dir.x >= 0f ? 1f : -1f;
+
+        float newY;
+        float newX;
+        if (Mathf.Abs(dir.y) < minY)
+        {
+            newY = minY * signY;
+            newX = Mathf.Sqrt(1f - minY * minY) * signX; // 勾股:x² + y² = 1}
+        }
+        else if (Mathf.Abs(dir.y) > maxY)
+        {
+            newY = maxY * signY;
+            newX = Mathf.Sqrt(1f - maxY * maxY) * signX;
+        }
+        else return velocity;
+        return new Vector2(newX, newY) * speed;            // 速率不变,只改方向
+    }
+
     public void ModifySpeed(float amount)
     {
         CurrentSpeed = Mathf.Clamp(CurrentSpeed += amount, 0f, launchSpeed * 1.5f);
