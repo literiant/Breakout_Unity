@@ -42,6 +42,25 @@ public class BallController : MonoBehaviour
     public float maxAngleFromHorizontal = 80f;
     public float CurrentSpeed { get; private set; }      // 速率由我们自己维护(单一真相源)
 
+    [Header("瞄准")]
+    [Tooltip("瞄准角离垂直方向的最大偏角(度)。60 对应水平方向 30° ~ 150°")]
+    [Range(0f, 85f)]
+    public float maxAimAngle = 60f;
+
+    [Tooltip("按住上/下键时,箭头每秒转多少度")]
+    public float aimRotateSpeed = 90f;
+
+    /// <summary>
+    /// 当前瞄准角:相对【垂直向上】的偏角(度)。正数 = 偏右,负数 = 偏左。
+    ///
+    /// 对外只读,由 BallController 在 ResetBall 时随机、在 HandleAim 里调整。
+    /// 瞄准箭头(AimIndicator)只是来【读】它,不拥有它。
+    /// </summary>
+    public float AimAngle { get; private set; }
+
+    /// <summary>球是否已经发射出去。表达式体属性(C# 6+)—— 只读属性的简写。</summary>
+    public bool IsLaunched => isLaunched;
+
     private ContactPoint2D[] contactBuffer = new ContactPoint2D[4];   // 预分配,避免每次碰撞都产生垃圾
     private Vector2 startPosition;
     private bool isLaunched = false;
@@ -55,7 +74,24 @@ public class BallController : MonoBehaviour
     void Update()
     {
         StickToPaddle();
+        HandleAim();
         HandleInput();
+    }
+
+    /// <summary>按住 ↑/↓ 调整瞄准角。只在球等待发射时有效。</summary>
+    private void HandleAim()
+    {
+        if (isLaunched) return;
+
+        // ⚠️ GetAxisRaw 而不是 GetAxis —— 这是 L1 讲过的区别:
+        //    GetAxis    自带缓动,数值从 0 平滑变到 1 → 适合摇杆式的模拟量
+        //    GetAxisRaw 只返回 -1 / 0 / 1,没有缓动     → 适合"按住就持续转"
+        //    瞄准要的是精确的匀速旋转,所以用 Raw。
+        float input = Input.GetAxisRaw("Vertical");
+        if (Mathf.Abs(input) < 0.01f) return;
+
+        AimAngle += input * aimRotateSpeed * Time.deltaTime;
+        AimAngle = Mathf.Clamp(AimAngle, -maxAimAngle, maxAimAngle);
     }
 
     /// <summary>
@@ -119,11 +155,25 @@ public class BallController : MonoBehaviour
         isLaunched = false;
         transform.position = startPosition;
         rb.velocity = Vector2.zero;
+
+        // ⚠️ 每次重置都重新随机一个瞄准角。
+        //    这样一来,"不按键 = 随机发射"就【自然成立】了 ——
+        //    不需要额外记一个"玩家调过角度没有"的标志。
+        //    这是通用技巧:把"分支"变成"初值 + 修改",往往能消掉一个状态变量。
+        AimAngle = Random.Range(-maxAimAngle, maxAimAngle);
     }
+
     private void LaunchBall()
     {
         isLaunched = true;
-        float rad = Random.Range(30f, 150f) * Mathf.Deg2Rad;
+
+        // 把"离垂直方向的偏角"换算成"从 +X 轴量的标准角":
+        //   AimAngle = 0   → 90°(正上)
+        //   AimAngle = +60 → 30°(右上方,接近水平)
+        //   AimAngle = -60 → 150°(左上方)
+        float angleFromX = 90f - AimAngle;
+        float rad = angleFromX * Mathf.Deg2Rad;
+
         rb.velocity = new Vector2(Mathf.Cos(rad), Mathf.Sin(rad)) * CurrentSpeed;
     }
     private void HandleInput()
