@@ -28,9 +28,11 @@ public class ScorePopupSpawner : MonoBehaviour
     void Awake()
     {
         // 预热:开局就把对象造好。这样游戏中最坏的情况也已经付过账了。
+        // ⚠️ 配置故障:吼 + 止损。停用之后 OnEnable 也不会订阅,一次日志就够。
         if (popupPrefab == null)
         {
-            Debug.LogError("ScorePopupSpawner: 还没有指定 popupPrefab", this);
+            Debug.LogError("ScorePopupSpawner: 还没有指定 popupPrefab,组件已停用", this);
+            enabled = false;
             return;
         }
 
@@ -54,7 +56,9 @@ public class ScorePopupSpawner : MonoBehaviour
 
     private void HandleBrickDestroyed(BrickDestroyedEvent data)
     {
-        if (popupPrefab == null) return;
+        // 这里【不再】需要 if (popupPrefab == null) return;
+        //   Awake 已经保证了它非空 —— 否则这个组件根本不会被启用。
+        //   多一个守卫会把后面的代码变成死代码,那个坑刚踩过。
 
         ScorePopup popup = Get();
 

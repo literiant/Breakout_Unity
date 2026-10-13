@@ -65,10 +65,17 @@ public class GameController : MonoBehaviour
 
         // 开局就把"依赖没接好"的问题吼出来,而不是等运行时莫名崩溃。
         // Debug.LogError 的第二个参数 this 会把报错绑定到物体上,Console 里点一下就能定位。
-        if (_ball == null) Debug.LogError("GameController: 没有指定球 _ball", this);
-        if (_spawner == null) Debug.LogError("GameController: 没有指定生成器 _spawner", this);
-        if (_scoreText == null || _livesText == null || _messageText == null)
-            Debug.LogError("GameController: UI 文本没有拖全", this);
+        // ⚠️ 配置故障:吼一声【然后止损】。
+        //    只吼不止损的话,后面的 StartLevel → _ball.ResetBall() 会每关抛一次 NRE,
+        //    日志被刷屏,真正的原因反而被埋掉。
+        //    enabled = false 之后 Start 也不会被调用 —— 这是 Unity 的保证。
+        if (_ball == null || _spawner == null ||
+            _scoreText == null || _livesText == null || _messageText == null)
+        {
+            Debug.LogError("GameController: 场景引用没接全(_ball / _spawner / UI 文本),组件已停用", this);
+            enabled = false;
+            return;
+        }
 
         // ⚠️ 原始颜色必须在这里【读一次并存下来】。
         //    如果每次刷新时现读 _livesText.color,读到的是"当前颜色" ——

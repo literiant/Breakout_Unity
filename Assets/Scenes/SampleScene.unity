@@ -808,6 +808,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a2b50090f6472df4a96c95ee8c57c50e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  brickDamagedShake: 0.04
+  brickDestroyedShake: 0.13
+  paddleHitShake: 0.06
+  ballLostShake: 0.3
+  shortDuration: 0.12
+  ballLostDuration: 0.35
 --- !u!1 &541078203
 GameObject:
   m_ObjectHideFlags: 0
@@ -1210,7 +1216,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 307214d26ec1cec4f8de16dd204a0edd, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  ball: {fileID: 278854323}
   color: {r: 1, g: 1, b: 1, a: 0.55}
   length: 1.5
   sortingOrder: 10
@@ -6207,8 +6212,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   ballTag: Ball
-  shakeIntensity: 0.3
-  shakeDuration: 0.35
 --- !u!1 &848602895
 GameObject:
   m_ObjectHideFlags: 0

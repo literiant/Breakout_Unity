@@ -1,8 +1,11 @@
 using UnityEngine;
 
 /// <summary>
-/// 死亡区 —— 挂载到 "Walls/DeathZone"(屏幕下方的 BoxCollider2D 触发器)上。
-/// 职责:球掉出场地时给一次震动反馈,并通知 GameController 处理后续规则。
+/// 死亡区 —— 挂在 "Walls/DeathZone"(屏幕下方的 BoxCollider2D 触发器)上。
+///
+/// 职责:球掉出场地时【只广播这个事实】。
+/// 扣命、重置球、震动、音效 —— 全都由订阅者自己决定。
+/// 它不认识 GameController,也不认识 CameraShake。
 /// </summary>
 public class DeathZone : MonoBehaviour
 {
@@ -10,22 +13,10 @@ public class DeathZone : MonoBehaviour
     [Tooltip("小球的 Tag。只有这个 Tag 进入死亡区才算数")]
     public string ballTag = "Ball";
 
-    [Header("反馈")]
-    [Tooltip("球掉出去时的摄像机震动幅度")]
-    public float shakeIntensity = 0.3f;
-
-    [Tooltip("球掉出去时的摄像机震动时长(秒)")]
-    public float shakeDuration = 0.35f;
-
     void OnTriggerEnter2D(Collider2D other)
     {
         if (!other.CompareTag(ballTag)) return;
 
-        // 只负责"报告事实"和给反馈,规则由 GameController 决定
-        if (CameraShake.Instance != null)
-            CameraShake.Instance.Shake(shakeIntensity, shakeDuration);
-
-        // 只报告"球掉出去了"这个事实。扣命、重置球这些规则由订阅者决定。
         GameEvents.RaiseBallLost();
     }
 }

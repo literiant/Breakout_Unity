@@ -29,13 +29,6 @@ public class BrickController : MonoBehaviour
     [Tooltip("碎裂结束时缩到原尺寸的百分之几")]
     public float breakScale = 0.2f;
 
-    [Header("撞击反馈")]
-    [Tooltip("被撞但没碎时的摄像机震动幅度")]
-    public float shakeOnHit = 0.05f;
-
-    [Tooltip("碎裂时的摄像机震动幅度")]
-    public float shakeOnBreak = 0.13f;
-
     private SpriteRenderer _sr;
     private BoxCollider2D _collider;
 
@@ -104,8 +97,6 @@ public class BrickController : MonoBehaviour
             position = transform.position,
             color = _fullColor,
         });
-
-        Shake(shakeOnHit);
     }
 
     /// <summary>碎裂:通知计分、关掉碰撞体、播动画,最后在协程末尾销毁自己。</summary>
@@ -128,8 +119,6 @@ public class BrickController : MonoBehaviour
         // ⚠️ 立刻关掉碰撞体。
         //    否则这 0.18 秒动画期间球还能再撞上来一次,而"已死"的砖块再被撞会重复加分。
         _collider.enabled = false;
-
-        Shake(shakeOnBreak);
 
         StartCoroutine(BreakAnimation());
     }
@@ -175,9 +164,4 @@ public class BrickController : MonoBehaviour
         Destroy(gameObject);                               // 必须是最后一句 —— 销毁会终止协程
     }
 
-    private void Shake(float intensity)
-    {
-        if (CameraShake.Instance != null)
-            CameraShake.Instance.Shake(intensity, 0.12f);
-    }
 }

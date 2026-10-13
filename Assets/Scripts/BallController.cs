@@ -21,8 +21,13 @@ public class BallController : MonoBehaviour
 
     void Awake()
     {
+        // ⚠️ 配置故障:吼 + 止损。只吼不止损的话,Start 里 paddle.tag 会抛 NRE。
         if (paddle == null)
-            Debug.LogError("BallController:没有指定挡板!", this);
+        {
+            Debug.LogError("BallController: 没有指定挡板 paddle,组件已停用", this);
+            enabled = false;
+            return;
+        }
         // 生命周期顺序:Awake → OnEnable → Start → Update / FixedUpdate
         // 在 Awake 里拿引用,能保证之后任何地方用 rb 都有效。
         rb = GetComponent<Rigidbody2D>();
