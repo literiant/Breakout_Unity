@@ -5,12 +5,17 @@ using TMPro;
 
 /// <summary>
 /// 全局游戏管理器 —— 挂载到场景中的空物体 "GameController" 上。
-/// 职责:持有跨物体的全局状态(分数、生命、关卡进度),并提供唯一访问入口。
+/// 职责:持有全局状态(分数、生命、关卡进度),并决定游戏的规则。
+///
+/// ⚠️ 它【不是】单例,也不提供全局访问入口 —— 谁想改分数就广播事件。
 /// </summary>
 public class GameController : MonoBehaviour
 {
-    /// <summary>单例入口。任何脚本都可以用 GameController.Instance 拿到它。</summary>
-    public static GameController Instance { get; private set; }
+    // ⚠️ 这里【没有】单例。
+    //    原来有 Instance,是为了让 BrickController / DeathZone 能直接调进来。
+    //    它们改成事件广播之后,唯一还在找 GameController 的只剩 DebugCheats ——
+    //    一个编辑器专用的调试工具。而【工具应该去找被工具,不是反过来】。
+    //    「需要一个引用」不等于「需要单例」。
 
     [Header("分数")]
     [Tooltip("当前分数。字段 —— 外部只能通过 ModifyScore 修改")]
@@ -52,16 +57,11 @@ public class GameController : MonoBehaviour
 
     void Awake()
     {
-        // 单例守卫:如果已经有实例了,就把自己销毁掉。
-        // 为什么可能出现两个?比如切场景时旧的不销毁、或者手滑在场景里放了两份。
-        // 注意这里用 != null 而不是 is null —— 因为这是 UnityEngine.Object。
-        if (Instance != null && Instance != this)
-        {
-            Destroy(gameObject);
-            return;                      // 关键:return 掉,别往下执行
-        }
-
-        Instance = this;
+        // ⚠️ 原来这里有一个"重复实例守卫"(发现第二个就把自己销毁)。
+        //    那是【单例】才需要的防御 —— 单例语义要求"全局唯一",所以必须强制执行。
+        //    现在没有单例了,这个守卫也就失去了依据,一并删除。
+        //    代价是:手滑在场景里放两份 GameController 不再被自动发现(会两份都跑)。
+        //    本项目只有一个场景、一个实例,这个代价可以接受。
 
         // 开局就把"依赖没接好"的问题吼出来,而不是等运行时莫名崩溃。
         // Debug.LogError 的第二个参数 this 会把报错绑定到物体上,Console 里点一下就能定位。

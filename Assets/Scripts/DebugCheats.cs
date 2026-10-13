@@ -37,6 +37,31 @@ public class DebugCheats : MonoBehaviour
     [Tooltip("假事件带多少分")]
     public int fakeBrickScore = 1;
 
+    // GameController 的引用。开一次就缓存下来,不在按键时反复找。
+    private GameController _game;
+
+    private void Awake()
+    {
+        // ⚠️ 这里【故意】用运行时查找,既不是单例,也不是 Inspector 拖引用。
+        //
+        //   ① 这是编辑器专用代码,打包后整段消失 —— 性能根本不是问题
+        //   ② 只在开局查一次,缓存在 _game 里
+        //   ③ 最重要的一条:GameController 【不需要知道调试工具的存在】。
+        //      工具应该去找被工具,而不是反过来 —— 原来的 Instance 正是反的。
+        //   ④ 丢进任何场景、任何位置都能用。调试工具本来就该这样。
+        //
+        //   这就是"运行时查找"唯一真正合适的场景:一次性 + 工具代码 + 零耦合。
+        _game = FindObjectOfType<GameController>();
+
+        if (_game == null)
+        {
+            // 吼,但【不】enabled = false —— 另外三个键(K / B / T)并不依赖它,
+            // 停用整个组件会误伤。
+            // 止损的方式不止一种:"只在初始化时吼一次,而不是每次按键都吼"也是一种。
+            Debug.LogWarning("DebugCheats: 场景里找不到 GameController,L 键(加命)不可用", this);
+        }
+    }
+
     private void Update()
     {
         if (Input.GetKeyDown(bombAllKey)) BombAllBricks();
@@ -56,8 +81,10 @@ public class DebugCheats : MonoBehaviour
 
     private void AddLife()
     {
-        if (GameController.Instance == null) return;
-        GameController.Instance.ModifyLife(1);
+        // 这里可以安静地 return:Awake 已经吼过一次了,原因不用重复播报。
+        if (_game == null) return;
+
+        _game.ModifyLife(1);
         Debug.Log("[调试] 生命 +1");
     }
 
